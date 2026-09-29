@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app and dmg
+        env:
+          VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '1.0.0' }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          VERSION="${VERSION#v}" ./scripts/build-app.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Glazki
+          path: build/Glazki.dmg
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/Glazki.dmg

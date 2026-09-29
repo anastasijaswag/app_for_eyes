@@ -56,20 +56,13 @@ struct PopoverView: View {
     private var settingsRows: some View {
         VStack(alignment: .leading, spacing: 10) {
             row("Работаю") {
-                Picker("", selection: $settings.workMinutes) {
-                    ForEach(Settings.workOptions, id: \.self) { Text(Format.workOption($0)).tag($0) }
-                }
+                CycleControl(options: Settings.workOptions, selection: $settings.workMinutes, title: Format.workOption)
             }
             row("Отдыхаю") {
-                Picker("", selection: $settings.breakSeconds) {
-                    ForEach(Settings.breakOptions, id: \.self) { Text(Format.breakOption($0)).tag($0) }
-                }
+                CycleControl(options: Settings.breakOptions, selection: $settings.breakSeconds, title: Format.breakOption)
             }
             row("Перерыв") {
-                Picker("", selection: $settings.breakStyle) {
-                    ForEach(BreakStyle.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
+                ChipPicker(options: BreakStyle.allCases, selection: $settings.breakStyle, title: \.title)
             }
             // Место под две строки держим всегда: если высота окошка меняется,
             // macOS теряет его скруглённые углы.
@@ -79,9 +72,7 @@ struct PopoverView: View {
                 .lineLimit(2, reservesSpace: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             row("Звук") {
-                Picker("", selection: $settings.sound) {
-                    ForEach(SoundChoice.allCases) { Text($0.title).tag($0) }
-                }
+                CycleControl(options: SoundChoice.allCases, selection: $settings.sound, title: \.title)
             }
         }
         .font(.system(size: 13))
@@ -92,16 +83,12 @@ struct PopoverView: View {
             Text(title)
             Spacer()
             content()
-                .labelsHidden()
-                .fixedSize()
         }
     }
 
     private var footer: some View {
         HStack {
-            Toggle("Запускать вместе с Mac", isOn: $launchAtLogin)
-                .toggleStyle(.checkbox)
-                .font(.system(size: 12))
+            SoftToggle(title: "Запускать вместе с Mac", isOn: $launchAtLogin)
             Spacer()
             Button("Выйти") { NSApp.terminate(nil) }
                 .buttonStyle(.plain)
@@ -148,7 +135,7 @@ private struct StatusCard: View {
     private var subtitle: String {
         switch controller.phase {
         case .working:
-            return "до перерыва · \(Format.workOption(settings.workMinutes)) работы, \(Format.breakOption(settings.breakSeconds)) отдыха"
+            return "до перерыва"
         case .onBreak:
             return "перерыв — посмотри вдаль 🌿"
         case .paused(let until):

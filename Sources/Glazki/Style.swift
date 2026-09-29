@@ -253,3 +253,102 @@ enum Phrases {
         all.randomElement() ?? all[0]
     }
 }
+
+// MARK: - Свои контролы вместо системных синих
+
+/// «‹ 20 мин ›» — листаешь стрелочками, без выпадающих списков.
+struct CycleControl<Value: Hashable>: View {
+    let options: [Value]
+    @Binding var selection: Value
+    let title: (Value) -> String
+
+    private var index: Int { options.firstIndex(of: selection) ?? 0 }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            arrow("chevron.left", step: -1)
+            Text(title(selection))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                .frame(minWidth: 78)
+            arrow("chevron.right", step: 1)
+        }
+        .foregroundStyle(Palette.ink)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(Palette.ink.opacity(0.07)))
+    }
+
+    private func arrow(_ symbol: String, step: Int) -> some View {
+        let target = index + step
+        let enabled = options.indices.contains(target)
+        return Button {
+            if enabled { selection = options[target] }
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 9, weight: .bold))
+                .frame(width: 24, height: 18)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .opacity(enabled ? 0.7 : 0.2)
+        .disabled(!enabled)
+    }
+}
+
+/// Два-три варианта «таблетками», выбранный подсвечен розовым.
+struct ChipPicker<Value: Hashable>: View {
+    let options: [Value]
+    @Binding var selection: Value
+    let title: (Value) -> String
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(options, id: \.self) { option in
+                let selected = option == selection
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = option }
+                } label: {
+                    Text(title(option))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(Palette.ink.opacity(selected ? 1 : 0.6))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(selected ? Palette.rose.opacity(0.35) : .clear))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(2)
+        .background(Capsule().fill(Palette.ink.opacity(0.07)))
+    }
+}
+
+/// Мягкий переключатель вместо синей галочки.
+struct SoftToggle: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            HStack(spacing: 8) {
+                ZStack(alignment: isOn ? .trailing : .leading) {
+                    Capsule()
+                        .fill(isOn ? Palette.rose : Palette.ink.opacity(0.15))
+                        .frame(width: 26, height: 15)
+                    Circle()
+                        .fill(Palette.paper)
+                        .frame(width: 11, height: 11)
+                        .padding(2)
+                }
+                .animation(.easeOut(duration: 0.15), value: isOn)
+                Text(title)
+                    .font(.system(size: 12))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}

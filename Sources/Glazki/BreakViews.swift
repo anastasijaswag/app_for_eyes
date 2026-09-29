@@ -2,7 +2,14 @@ import SwiftUI
 
 /// Что показать на кружке: секунды для коротких перерывов, м:сс для длинных.
 @MainActor
+private func breakProgress(_ controller: BreakController) -> Double {
+    controller.isOnBreak ? controller.progress : 1
+}
+
+@MainActor
 private func countdownText(_ controller: BreakController) -> (label: String, caption: String?) {
+    // Пока окно тает после перерыва, контроллер уже считает работу — показываем ноль.
+    guard controller.isOnBreak else { return controller.breakDuration > 60 ? ("0:00", nil) : ("0", "секунд") }
     let seconds = Int(controller.remaining.rounded(.up))
     if controller.breakDuration > 60 {
         return (Format.clock(controller.remaining), nil)
@@ -19,8 +26,9 @@ struct FullBreakView: View {
     var body: some View {
         let text = countdownText(controller)
         ZStack {
+            Color.black.opacity(0.6)
             Haze()
-                .opacity(0.94)
+                .opacity(0.8)
 
             VStack(spacing: 40) {
                 Text(phrase)
@@ -29,7 +37,7 @@ struct FullBreakView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(6)
 
-                CountdownRing(progress: controller.progress, label: text.label, caption: text.caption,
+                CountdownRing(progress: breakProgress(controller), label: text.label, caption: text.caption,
                               size: 210, lineWidth: 5, fontSize: 60)
 
                 HStack(spacing: 32) {
@@ -55,7 +63,7 @@ struct CornerBreakView: View {
     var body: some View {
         let text = countdownText(controller)
         HStack(spacing: 14) {
-            CountdownRing(progress: controller.progress, label: text.label, caption: nil,
+            CountdownRing(progress: breakProgress(controller), label: text.label, caption: nil,
                           size: 56, lineWidth: 3.5, fontSize: text.label.count > 2 ? 14 : 20)
 
             VStack(alignment: .leading, spacing: 8) {

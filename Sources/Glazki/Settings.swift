@@ -14,8 +14,8 @@ enum BreakStyle: String, CaseIterable, Identifiable {
 
     var hint: String {
         switch self {
-        case .dim: return "Экран мягко затуманится, по центру — обратный отсчёт"
-        case .corner: return "Маленькое окошко в углу — удобно на созвонах"
+        case .dim: return "Экран затемнится, по центру — обратный отсчёт"
+        case .corner: return "Маленькое окошко в углу — для созвонов"
         }
     }
 }

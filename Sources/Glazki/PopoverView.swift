@@ -2,6 +2,9 @@ import SwiftUI
 
 /// Окошко, которое открывается по клику на глазик в строке меню.
 struct PopoverView: View {
+    /// Прозрачные поля вокруг окошка, чтобы было куда падать тени.
+    static let shadowMargin: CGFloat = 24
+
     @ObservedObject var controller: BreakController
     @ObservedObject var settings: Settings
     @State private var launchAtLogin = LoginItem.isEnabled
@@ -17,8 +20,15 @@ struct PopoverView: View {
         }
         .padding(14)
         .frame(width: 300)
-        .background(Palette.paper)
         .foregroundStyle(Palette.ink)
+        .background(Palette.paper)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Palette.ink.opacity(0.08))
+        )
+        .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
+        .padding(PopoverView.shadowMargin)
         .onChange(of: settings.sound) { SoundPlayer.shared.play($0, ending: false) }
         .onChange(of: launchAtLogin) { LoginItem.set($0) }
     }
@@ -64,12 +74,11 @@ struct PopoverView: View {
             row("Перерыв") {
                 ChipPicker(options: BreakStyle.allCases, selection: $settings.breakStyle, title: \.title)
             }
-            // Место под две строки держим всегда: если высота окошка меняется,
-            // macOS теряет его скруглённые углы.
             Text(settings.breakStyle.hint)
                 .font(.system(size: 11))
                 .opacity(0.6)
-                .lineLimit(2, reservesSpace: true)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity, alignment: .leading)
             row("Звук") {
                 CycleControl(options: SoundChoice.allCases, selection: $settings.sound, title: \.title)

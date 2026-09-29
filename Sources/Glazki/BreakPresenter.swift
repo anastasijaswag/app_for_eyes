@@ -19,6 +19,7 @@ final class BreakPresenter {
         case .dim:
             for screen in NSScreen.screens {
                 let panel = makePanel(frame: screen.frame, level: .screenSaver)
+                panel.appearance = NSAppearance(named: .darkAqua) // сумеречная палитра — темнее и спокойнее
                 panel.contentView = NSHostingView(rootView: FullBreakView(controller: controller, phrase: phrase))
                 panels.append(panel)
             }

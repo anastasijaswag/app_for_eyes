@@ -2,20 +2,23 @@ import SwiftUI
 
 @main
 struct GlazkiApp: App {
-    @StateObject private var controller = BreakController.shared
-    @StateObject private var settings = Settings.shared
-
-    init() {
-        BreakController.shared.start()
-        LoginItem.enableOnFirstLaunch()
-    }
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        MenuBarExtra {
-            PopoverView(controller: controller, settings: settings)
-        } label: {
-            Image(nsImage: controller.isPaused ? MenuBarIcon.closed : MenuBarIcon.open)
+        // Окон у приложения нет — только глазик в строке меню (см. StatusItemController).
+        SwiftUI.Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.window)
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var statusItem: StatusItemController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        BreakController.shared.start()
+        LoginItem.enableOnFirstLaunch()
+        statusItem = StatusItemController(controller: BreakController.shared, settings: Settings.shared)
     }
 }

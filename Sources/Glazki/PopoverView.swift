@@ -71,10 +71,13 @@ struct PopoverView: View {
                 }
                 .pickerStyle(.segmented)
             }
+            // Место под две строки держим всегда: если высота окошка меняется,
+            // macOS теряет его скруглённые углы.
             Text(settings.breakStyle.hint)
                 .font(.system(size: 11))
                 .opacity(0.6)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(2, reservesSpace: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
             row("Звук") {
                 Picker("", selection: $settings.sound) {
                     ForEach(SoundChoice.allCases) { Text($0.title).tag($0) }

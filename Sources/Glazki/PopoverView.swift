@@ -8,6 +8,7 @@ struct PopoverView: View {
     @ObservedObject var controller: BreakController
     @ObservedObject var settings: Settings
     @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var showPauseOptions = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -37,21 +38,35 @@ struct PopoverView: View {
     private var actions: some View {
         HStack(spacing: 8) {
             switch controller.phase {
+            case .working where showPauseOptions:
+                // Варианты паузы раскрываются прямо в строке — без системного меню.
+                Button("30 мин") { pause { controller.pause(for: 30 * 60) } }
+                    .buttonStyle(SoftButtonStyle())
+                Button("час") { pause { controller.pause(for: 60 * 60) } }
+                    .buttonStyle(SoftButtonStyle())
+                Button("до завтра") { pause { controller.pauseUntilTomorrow() } }
+                    .buttonStyle(SoftButtonStyle())
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { showPauseOptions = false }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .frame(height: 15)
+                }
+                .buttonStyle(SoftButtonStyle())
             case .working:
                 Button("Перерыв сейчас") { controller.breakNow() }
                     .buttonStyle(SoftButtonStyle())
-                Menu {
-                    Button("На 30 минут") { controller.pause(for: 30 * 60) }
-                    Button("На час") { controller.pause(for: 60 * 60) }
-                    Button("До завтра") { controller.pauseUntilTomorrow() }
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { showPauseOptions = true }
                 } label: {
-                    Text("Пауза")
+                    HStack(spacing: 4) {
+                        Text("Пауза")
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                    }
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                .padding(.horizontal, 12)
-                .padding(.vertical, 5)
-                .background(Capsule().fill(Palette.ink.opacity(0.07)))
+                .buttonStyle(SoftButtonStyle())
             case .onBreak:
                 Button("Пропустить перерыв") { controller.skipBreak() }
                     .buttonStyle(SoftButtonStyle())
@@ -61,6 +76,11 @@ struct PopoverView: View {
             }
             Spacer()
         }
+    }
+
+    private func pause(_ action: () -> Void) {
+        action()
+        showPauseOptions = false
     }
 
     private var settingsRows: some View {

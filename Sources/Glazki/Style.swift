@@ -366,7 +366,8 @@ enum PopupMenu {
         @objc func run() { action() }
     }
 
-    static func show(_ items: [(String, () -> Void)]) {
+    /// `view` — кнопка, под которой выпадает меню (как у обычных системных выпадашек).
+    static func show(_ items: [(String, () -> Void)], below view: NSView?) {
         let menu = NSMenu()
         for (title, action) in items {
             let handler = Item(action)
@@ -375,6 +376,33 @@ enum PopupMenu {
             item.representedObject = handler // target — слабая ссылка, держим обработчик здесь
             menu.addItem(item)
         }
-        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+        if let view {
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: -4), in: view)
+        } else {
+            menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+        }
+    }
+}
+
+/// Запоминает AppKit-вид под SwiftUI-кнопкой, чтобы знать, откуда выпадать меню.
+final class MenuAnchor {
+    weak var view: NSView?
+}
+
+struct MenuAnchorView: NSViewRepresentable {
+    let anchor: MenuAnchor
+
+    private final class AnchorView: NSView {
+        override var isFlipped: Bool { false } // y = 0 — нижний край кнопки
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = AnchorView()
+        anchor.view = view
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        anchor.view = nsView
     }
 }

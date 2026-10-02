@@ -8,6 +8,7 @@ struct PopoverView: View {
     @ObservedObject var controller: BreakController
     @ObservedObject var settings: Settings
     @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var pauseAnchor = MenuAnchor()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -45,7 +46,7 @@ struct PopoverView: View {
                         ("На 30 минут", { controller.pause(for: 30 * 60) }),
                         ("На час", { controller.pause(for: 60 * 60) }),
                         ("До завтра", { controller.pauseUntilTomorrow() }),
-                    ])
+                    ], below: pauseAnchor.view)
                 } label: {
                     HStack(spacing: 4) {
                         Text("Пауза")
@@ -54,6 +55,7 @@ struct PopoverView: View {
                     }
                 }
                 .buttonStyle(SoftButtonStyle())
+                .background(MenuAnchorView(anchor: pauseAnchor))
             case .onBreak:
                 Button("Пропустить перерыв") { controller.skipBreak() }
                     .buttonStyle(SoftButtonStyle())

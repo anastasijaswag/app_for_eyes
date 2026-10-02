@@ -8,7 +8,6 @@ struct PopoverView: View {
     @ObservedObject var controller: BreakController
     @ObservedObject var settings: Settings
     @State private var launchAtLogin = LoginItem.isEnabled
-    @State private var showPauseOptions = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -38,27 +37,15 @@ struct PopoverView: View {
     private var actions: some View {
         HStack(spacing: 8) {
             switch controller.phase {
-            case .working where showPauseOptions:
-                // Варианты паузы раскрываются прямо в строке — без системного меню.
-                Button("30 мин") { pause { controller.pause(for: 30 * 60) } }
-                    .buttonStyle(SoftButtonStyle())
-                Button("час") { pause { controller.pause(for: 60 * 60) } }
-                    .buttonStyle(SoftButtonStyle())
-                Button("до завтра") { pause { controller.pauseUntilTomorrow() } }
-                    .buttonStyle(SoftButtonStyle())
-                Button {
-                    withAnimation(.easeOut(duration: 0.15)) { showPauseOptions = false }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .frame(height: 15)
-                }
-                .buttonStyle(SoftButtonStyle())
             case .working:
                 Button("Перерыв сейчас") { controller.breakNow() }
                     .buttonStyle(SoftButtonStyle())
                 Button {
-                    withAnimation(.easeOut(duration: 0.15)) { showPauseOptions = true }
+                    PopupMenu.show([
+                        ("На 30 минут", { controller.pause(for: 30 * 60) }),
+                        ("На час", { controller.pause(for: 60 * 60) }),
+                        ("До завтра", { controller.pauseUntilTomorrow() }),
+                    ])
                 } label: {
                     HStack(spacing: 4) {
                         Text("Пауза")
@@ -76,11 +63,6 @@ struct PopoverView: View {
             }
             Spacer()
         }
-    }
-
-    private func pause(_ action: () -> Void) {
-        action()
-        showPauseOptions = false
     }
 
     private var settingsRows: some View {

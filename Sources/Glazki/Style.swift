@@ -166,8 +166,12 @@ enum MenuBarIcon {
     static let closed = make(closed: true)
 
     private static func make(closed: Bool) -> NSImage {
-        let image = NSImage(size: NSSize(width: 20, height: 16), flipped: false) { _ in
+        let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { _ in
             NSColor.black.set()
+            // Сдвигаем рисунок так, чтобы глазик стоял ровно по центру строки меню.
+            let transform = NSAffineTransform()
+            transform.translateX(by: 0, yBy: closed ? 3 : -0.4)
+            transform.concat()
             let path = NSBezierPath()
             path.lineWidth = 1.4
             path.lineCapStyle = .round
@@ -350,5 +354,27 @@ struct SoftToggle: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Обычное системное выпадающее меню, которое можно открыть из нашей кнопки.
+@MainActor
+enum PopupMenu {
+    private final class Item: NSObject {
+        let action: () -> Void
+        init(_ action: @escaping () -> Void) { self.action = action }
+        @objc func run() { action() }
+    }
+
+    static func show(_ items: [(String, () -> Void)]) {
+        let menu = NSMenu()
+        for (title, action) in items {
+            let handler = Item(action)
+            let item = NSMenuItem(title: title, action: #selector(Item.run), keyEquivalent: "")
+            item.target = handler
+            item.representedObject = handler // target — слабая ссылка, держим обработчик здесь
+            menu.addItem(item)
+        }
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
     }
 }
